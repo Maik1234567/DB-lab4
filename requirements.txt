@@ -1,4 +1,4 @@
-﻿﻿aniso8601==9.0.1
+aniso8601==9.0.1
 apispec==6.7.1
 apispec-webframeworks==0.5.2
 astroid==3.3.5
