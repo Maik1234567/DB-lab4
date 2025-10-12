@@ -383,7 +383,7 @@ def _init_swagger(app: Flask) -> None:
     ns_reservations = api.namespace('reservations', description='Equipment reservations management')
     ns_repairments = api.namespace('repairments', description='Equipment repairments management')
     ns_health = api.namespace('health', description='System monitoring')
-    
+    # test
     # Authentication endpoints
     @ns_auth.route('/register')
     class Register(Resource):
