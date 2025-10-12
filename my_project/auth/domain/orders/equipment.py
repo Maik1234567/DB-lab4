@@ -10,7 +10,7 @@ class Equipment(db.Model, IDto):
     name = db.Column(db.String(45), nullable=False)
     description = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(45), nullable=False)
-    equipment_item_id = db.Column(db.Integer, db.ForeignKey("equipment_items.id"), nullable=False)
+    equipment_item_id = db.Column(db.Integer, db.ForeignKey("equipment_item.id"), nullable=False)
 
     # equipment_item = db.relationship('EquipmentItem', backref='equipments')
 
