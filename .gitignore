@@ -12,6 +12,7 @@ pytest.ini
 # virtualenv
 app/venv/
 
+.env
 
 # IntelliJ
 /out/
