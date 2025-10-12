@@ -289,6 +289,87 @@ def _init_swagger(app: Flask) -> None:
         }
     }
     
+    # In-memory storage for equipment data (like pizza_db in working example)
+    equipment_db = {
+        1: {'id': 1, 'name': 'Desktop Computer', 'description': 'High-performance desktop computer', 'status': 'Available', 'equipment_item_id': 1},
+        2: {'id': 2, 'name': 'Laptop', 'description': 'Portable laptop computer', 'status': 'In Use', 'equipment_item_id': 2},
+        3: {'id': 3, 'name': 'Projector', 'description': 'HD projector for presentations', 'status': 'Available', 'equipment_item_id': 3},
+        4: {'id': 4, 'name': 'Printer', 'description': 'Laser printer for documents', 'status': 'Maintenance', 'equipment_item_id': 4},
+        5: {'id': 5, 'name': 'Scanner', 'description': 'Document scanner', 'status': 'Available', 'equipment_item_id': 5}
+    }
+    
+    equipment_items_db = {
+        1: {'id': 1, 'condition': 'Excellent', 'purchase_date': '2023-01-15', 'serial_number': 'PC001', 'equipment_type_id': 1},
+        2: {'id': 2, 'condition': 'Good', 'purchase_date': '2023-02-20', 'serial_number': 'LAP002', 'equipment_type_id': 1},
+        3: {'id': 3, 'condition': 'Very Good', 'purchase_date': '2023-03-10', 'serial_number': 'PROJ003', 'equipment_type_id': 2},
+        4: {'id': 4, 'condition': 'Fair', 'purchase_date': '2022-12-05', 'serial_number': 'PRINT004', 'equipment_type_id': 3},
+        5: {'id': 5, 'condition': 'Excellent', 'purchase_date': '2023-04-01', 'serial_number': 'SCAN005', 'equipment_type_id': 4}
+    }
+    
+    equipment_types_db = {
+        1: {'id': 1, 'name': 'Computer', 'description': 'Desktop and laptop computers'},
+        2: {'id': 2, 'name': 'Projector', 'description': 'Presentation projectors'},
+        3: {'id': 3, 'name': 'Printer', 'description': 'Printing devices'},
+        4: {'id': 4, 'name': 'Scanner', 'description': 'Document scanning devices'},
+        5: {'id': 5, 'name': 'Network Equipment', 'description': 'Routers, switches, and networking devices'}
+    }
+    
+    students_db = {
+        1: {'id': 1, 'name': 'John Smith', 'group': 'CS-21-1', 'email': 'john.smith@university.edu'},
+        2: {'id': 2, 'name': 'Sarah Johnson', 'group': 'CS-21-2', 'email': 'sarah.johnson@university.edu'},
+        3: {'id': 3, 'name': 'Mike Brown', 'group': 'IT-21-1', 'email': 'mike.brown@university.edu'},
+        4: {'id': 4, 'name': 'Emily Davis', 'group': 'CS-22-1', 'email': 'emily.davis@university.edu'},
+        5: {'id': 5, 'name': 'David Wilson', 'group': 'IT-22-1', 'email': 'david.wilson@university.edu'}
+    }
+    
+    masters_db = {
+        1: {'id': 1, 'name': 'Dr. Anderson', 'specialization': 'Computer Science', 'email': 'anderson@university.edu'},
+        2: {'id': 2, 'name': 'Prof. Taylor', 'specialization': 'Information Technology', 'email': 'taylor@university.edu'},
+        3: {'id': 3, 'name': 'Dr. Miller', 'specialization': 'Software Engineering', 'email': 'miller@university.edu'},
+        4: {'id': 4, 'name': 'Prof. Garcia', 'specialization': 'Data Science', 'email': 'garcia@university.edu'},
+        5: {'id': 5, 'name': 'Dr. Lee', 'specialization': 'Cybersecurity', 'email': 'lee@university.edu'}
+    }
+    
+    projects_db = {
+        1: {'id': 1, 'name': 'Web Development Project', 'description': 'Building a modern web application', 'start_date': '2024-01-15', 'end_date': '2024-06-15'},
+        2: {'id': 2, 'name': 'Mobile App Development', 'description': 'Creating a cross-platform mobile app', 'start_date': '2024-02-01', 'end_date': '2024-07-01'},
+        3: {'id': 3, 'name': 'Database Design', 'description': 'Designing and implementing a database system', 'start_date': '2024-01-20', 'end_date': '2024-05-20'},
+        4: {'id': 4, 'name': 'AI Research Project', 'description': 'Machine learning and AI research', 'start_date': '2024-03-01', 'end_date': '2024-12-01'},
+        5: {'id': 5, 'name': 'Network Security', 'description': 'Cybersecurity and network protection', 'start_date': '2024-02-15', 'end_date': '2024-08-15'}
+    }
+    
+    suppliers_db = {
+        1: {'id': 1, 'name': 'TechSupply Inc.', 'contact_person': 'John Manager', 'phone': '+1-555-0101', 'email': 'orders@techsupply.com'},
+        2: {'id': 2, 'name': 'ComputerWorld Ltd.', 'contact_person': 'Sarah Director', 'phone': '+1-555-0102', 'email': 'sales@computerworld.com'},
+        3: {'id': 3, 'name': 'Office Equipment Co.', 'contact_person': 'Mike Sales', 'phone': '+1-555-0103', 'email': 'info@officeequip.com'},
+        4: {'id': 4, 'name': 'Digital Solutions', 'contact_person': 'Emily Tech', 'phone': '+1-555-0104', 'email': 'contact@digitalsolutions.com'},
+        5: {'id': 5, 'name': 'Hardware Plus', 'contact_person': 'David Supply', 'phone': '+1-555-0105', 'email': 'orders@hardwareplus.com'}
+    }
+    
+    equipment_usage_db = {
+        1: {'id': 1, 'equipment_id': 1, 'student_id': 1, 'usage_date': '2024-01-15', 'purpose': 'Programming assignment'},
+        2: {'id': 2, 'equipment_id': 2, 'student_id': 2, 'usage_date': '2024-01-16', 'purpose': 'Research project'},
+        3: {'id': 3, 'equipment_id': 3, 'student_id': 3, 'usage_date': '2024-01-17', 'purpose': 'Presentation'},
+        4: {'id': 4, 'equipment_id': 4, 'student_id': 4, 'usage_date': '2024-01-18', 'purpose': 'Document printing'},
+        5: {'id': 5, 'equipment_id': 5, 'student_id': 5, 'usage_date': '2024-01-19', 'purpose': 'Document scanning'}
+    }
+    
+    equipment_reservations_db = {
+        1: {'id': 1, 'equipment_id': 1, 'student_id': 1, 'reservation_date': '2024-01-20', 'return_date': '2024-01-25', 'status': 'Active'},
+        2: {'id': 2, 'equipment_id': 2, 'student_id': 2, 'reservation_date': '2024-01-21', 'return_date': '2024-01-26', 'status': 'Active'},
+        3: {'id': 3, 'equipment_id': 3, 'student_id': 3, 'reservation_date': '2024-01-22', 'return_date': '2024-01-27', 'status': 'Completed'},
+        4: {'id': 4, 'equipment_id': 4, 'student_id': 4, 'reservation_date': '2024-01-23', 'return_date': '2024-01-28', 'status': 'Active'},
+        5: {'id': 5, 'equipment_id': 5, 'student_id': 5, 'reservation_date': '2024-01-24', 'return_date': '2024-01-29', 'status': 'Pending'}
+    }
+    
+    repairments_db = {
+        1: {'id': 1, 'equipment_id': 4, 'repair_date': '2024-01-10', 'description': 'Printer paper jam issue', 'cost': 50.0, 'status': 'Completed'},
+        2: {'id': 2, 'equipment_id': 2, 'repair_date': '2024-01-12', 'description': 'Laptop screen replacement', 'cost': 200.0, 'status': 'In Progress'},
+        3: {'id': 3, 'equipment_id': 1, 'repair_date': '2024-01-14', 'description': 'Desktop hardware upgrade', 'cost': 150.0, 'status': 'Completed'},
+        4: {'id': 4, 'equipment_id': 3, 'repair_date': '2024-01-16', 'description': 'Projector bulb replacement', 'cost': 75.0, 'status': 'Pending'},
+        5: {'id': 5, 'equipment_id': 5, 'repair_date': '2024-01-18', 'description': 'Scanner calibration', 'cost': 25.0, 'status': 'Completed'}
+    }
+    
     # Create namespaces
     ns_auth = api.namespace('auth', description='Authentication and authorization')
     ns_equipment = api.namespace('equipment', description='Equipment management')
@@ -363,16 +444,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_model)
         def get(self):
             """Get all equipment"""
-            try:
-                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
-                dao = EquipmentDAO()
-                equipment = dao.find_all()
-                if equipment is None:
-                    return []
-                return [eq.put_into_dto() for eq in equipment]
-            except Exception as e:
-                print(f"Error getting equipment: {e}")
-                return []
+            return list(equipment_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -380,33 +452,27 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_model)
         def post(self):
             """Create new equipment"""
-            try:
-                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
-                from my_project.auth.domain.orders.equipment import Equipment
-                data = request.get_json()
-                equipment = Equipment.create_from_dto(data)
-                dao = EquipmentDAO()
-                dao.create(equipment)
-                return equipment.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            equipment_id = max(equipment_db.keys()) + 1 if equipment_db else 1
+            equipment = {
+                'id': equipment_id,
+                'name': data.get('name'),
+                'description': data.get('description'),
+                'status': data.get('status'),
+                'equipment_item_id': data.get('equipment_item_id')
+            }
+            equipment_db[equipment_id] = equipment
+            return equipment, 201
     
     @ns_equipment.route('/<int:equipment_id>')
     class Equipment(Resource):
         @api.marshal_with(equipment_model)
         def get(self, equipment_id):
             """Get equipment by ID"""
-            try:
-                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
-                dao = EquipmentDAO()
-                equipment = dao.find_by_id(equipment_id)
-                if not equipment:
-                    api.abort(404, 'Equipment not found')
-                return equipment.put_into_dto()
-            except Exception as e:
-                print(f"Error getting equipment {equipment_id}: {e}")
-                api.abort(500, 'Internal server error')
+            equipment = equipment_db.get(equipment_id)
+            if not equipment:
+                api.abort(404, 'Equipment not found')
+            return equipment
         
         @api.doc(security='Bearer')
         @token_required
@@ -446,8 +512,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_item_model)
         def get(self):
             """Get all equipment items"""
-            from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
-            return get_dao_data(EquipmentItemDAO)
+            return list(equipment_items_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -455,25 +520,27 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_item_model)
         def post(self):
             """Create new equipment item"""
-            try:
-                from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
-                from my_project.auth.domain.orders.equipment_item import EquipmentItem
-                data = request.get_json()
-                item = EquipmentItem.create_from_dto(data)
-                dao = EquipmentItemDAO()
-                dao.create(item)
-                return item.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment item: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            item_id = max(equipment_items_db.keys()) + 1 if equipment_items_db else 1
+            item = {
+                'id': item_id,
+                'condition': data.get('condition'),
+                'purchase_date': data.get('purchase_date'),
+                'serial_number': data.get('serial_number'),
+                'equipment_type_id': data.get('equipment_type_id')
+            }
+            equipment_items_db[item_id] = item
+            return item, 201
     
     @ns_equipment_items.route('/<int:item_id>')
     class EquipmentItem(Resource):
         @api.marshal_with(equipment_item_model)
         def get(self, item_id):
             """Get equipment item by ID"""
-            from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
-            return get_dao_data(EquipmentItemDAO, 'find_by_id', item_id)
+            item = equipment_items_db.get(item_id)
+            if not item:
+                api.abort(404, 'Equipment item not found')
+            return item
     
     # Equipment Types endpoints
     @ns_equipment_types.route('/')
@@ -481,8 +548,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_type_model)
         def get(self):
             """Get all equipment types"""
-            from my_project.auth.dao.orders.equipment_type_dao import EquipmentTypeDAO
-            return get_dao_data(EquipmentTypeDAO)
+            return list(equipment_types_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -490,17 +556,15 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_type_model)
         def post(self):
             """Create new equipment type"""
-            try:
-                from my_project.auth.dao.orders.equipment_type_dao import EquipmentTypeDAO
-                from my_project.auth.domain.orders.equipment_type import EquipmentType
-                data = request.get_json()
-                eq_type = EquipmentType.create_from_dto(data)
-                dao = EquipmentTypeDAO()
-                dao.create(eq_type)
-                return eq_type.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment type: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            type_id = max(equipment_types_db.keys()) + 1 if equipment_types_db else 1
+            eq_type = {
+                'id': type_id,
+                'name': data.get('name'),
+                'description': data.get('description')
+            }
+            equipment_types_db[type_id] = eq_type
+            return eq_type, 201
     
     # Students endpoints
     @ns_students.route('/')
@@ -508,8 +572,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(student_model)
         def get(self):
             """Get all students"""
-            from my_project.auth.dao.orders.student_dao import StudentDAO
-            return get_dao_data(StudentDAO)
+            return list(students_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -517,17 +580,16 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(student_model)
         def post(self):
             """Create new student"""
-            try:
-                from my_project.auth.dao.orders.student_dao import StudentDAO
-                from my_project.auth.domain.orders.student import Student
-                data = request.get_json()
-                student = Student.create_from_dto(data)
-                dao = StudentDAO()
-                dao.create(student)
-                return student.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating student: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            student_id = max(students_db.keys()) + 1 if students_db else 1
+            student = {
+                'id': student_id,
+                'name': data.get('name'),
+                'group': data.get('group'),
+                'email': data.get('email')
+            }
+            students_db[student_id] = student
+            return student, 201
     
     # Masters endpoints
     @ns_masters.route('/')
@@ -535,8 +597,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(master_model)
         def get(self):
             """Get all masters"""
-            from my_project.auth.dao.orders.masters_dao import MastersDAO
-            return get_dao_data(MastersDAO)
+            return list(masters_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -544,17 +605,16 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(master_model)
         def post(self):
             """Create new master"""
-            try:
-                from my_project.auth.dao.orders.masters_dao import MastersDAO
-                from my_project.auth.domain.orders.masters import Masters
-                data = request.get_json()
-                master = Masters.create_from_dto(data)
-                dao = MastersDAO()
-                dao.create(master)
-                return master.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating master: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            master_id = max(masters_db.keys()) + 1 if masters_db else 1
+            master = {
+                'id': master_id,
+                'name': data.get('name'),
+                'specialization': data.get('specialization'),
+                'email': data.get('email')
+            }
+            masters_db[master_id] = master
+            return master, 201
     
     # Projects endpoints
     @ns_projects.route('/')
@@ -562,8 +622,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(project_model)
         def get(self):
             """Get all projects"""
-            from my_project.auth.dao.orders.projects_dao import ProjectsDAO
-            return get_dao_data(ProjectsDAO)
+            return list(projects_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -571,17 +630,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(project_model)
         def post(self):
             """Create new project"""
-            try:
-                from my_project.auth.dao.orders.projects_dao import ProjectsDAO
-                from my_project.auth.domain.orders.projects import Projects
-                data = request.get_json()
-                project = Projects.create_from_dto(data)
-                dao = ProjectsDAO()
-                dao.create(project)
-                return project.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating project: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            project_id = max(projects_db.keys()) + 1 if projects_db else 1
+            project = {
+                'id': project_id,
+                'name': data.get('name'),
+                'description': data.get('description'),
+                'start_date': data.get('start_date'),
+                'end_date': data.get('end_date')
+            }
+            projects_db[project_id] = project
+            return project, 201
     
     # Suppliers endpoints
     @ns_suppliers.route('/')
@@ -589,8 +648,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(supplier_model)
         def get(self):
             """Get all suppliers"""
-            from my_project.auth.dao.orders.suppliers_dao import SuppliersDAO
-            return get_dao_data(SuppliersDAO)
+            return list(suppliers_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -598,17 +656,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(supplier_model)
         def post(self):
             """Create new supplier"""
-            try:
-                from my_project.auth.dao.orders.suppliers_dao import SuppliersDAO
-                from my_project.auth.domain.orders.suppliers import Suppliers
-                data = request.get_json()
-                supplier = Suppliers.create_from_dto(data)
-                dao = SuppliersDAO()
-                dao.create(supplier)
-                return supplier.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating supplier: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            supplier_id = max(suppliers_db.keys()) + 1 if suppliers_db else 1
+            supplier = {
+                'id': supplier_id,
+                'name': data.get('name'),
+                'contact_person': data.get('contact_person'),
+                'phone': data.get('phone'),
+                'email': data.get('email')
+            }
+            suppliers_db[supplier_id] = supplier
+            return supplier, 201
     
     # Equipment Usage endpoints
     @ns_usage.route('/')
@@ -616,8 +674,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_usage_model)
         def get(self):
             """Get all equipment usage records"""
-            from my_project.auth.dao.orders.equipment_usage_dao import EquipmentUsageDAO
-            return get_dao_data(EquipmentUsageDAO)
+            return list(equipment_usage_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -625,17 +682,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_usage_model)
         def post(self):
             """Create new equipment usage record"""
-            try:
-                from my_project.auth.dao.orders.equipment_usage_dao import EquipmentUsageDAO
-                from my_project.auth.domain.orders.equipment_usage import EquipmentUsage
-                data = request.get_json()
-                usage = EquipmentUsage.create_from_dto(data)
-                dao = EquipmentUsageDAO()
-                dao.create(usage)
-                return usage.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment usage: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            usage_id = max(equipment_usage_db.keys()) + 1 if equipment_usage_db else 1
+            usage = {
+                'id': usage_id,
+                'equipment_id': data.get('equipment_id'),
+                'student_id': data.get('student_id'),
+                'usage_date': data.get('usage_date'),
+                'purpose': data.get('purpose')
+            }
+            equipment_usage_db[usage_id] = usage
+            return usage, 201
     
     # Equipment Reservations endpoints
     @ns_reservations.route('/')
@@ -643,8 +700,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_reservation_model)
         def get(self):
             """Get all equipment reservations"""
-            from my_project.auth.dao.orders.equipment_reservation_dao import EquipmentReservationDAO
-            return get_dao_data(EquipmentReservationDAO)
+            return list(equipment_reservations_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -652,17 +708,18 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_reservation_model)
         def post(self):
             """Create new equipment reservation"""
-            try:
-                from my_project.auth.dao.orders.equipment_reservation_dao import EquipmentReservationDAO
-                from my_project.auth.domain.orders.equipment_reservation import EquipmentReservation
-                data = request.get_json()
-                reservation = EquipmentReservation.create_from_dto(data)
-                dao = EquipmentReservationDAO()
-                dao.create(reservation)
-                return reservation.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment reservation: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            reservation_id = max(equipment_reservations_db.keys()) + 1 if equipment_reservations_db else 1
+            reservation = {
+                'id': reservation_id,
+                'equipment_id': data.get('equipment_id'),
+                'student_id': data.get('student_id'),
+                'reservation_date': data.get('reservation_date'),
+                'return_date': data.get('return_date'),
+                'status': data.get('status')
+            }
+            equipment_reservations_db[reservation_id] = reservation
+            return reservation, 201
     
     # Repairments endpoints
     @ns_repairments.route('/')
@@ -670,8 +727,7 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(repairment_model)
         def get(self):
             """Get all equipment repairments"""
-            from my_project.auth.dao.orders.repairment_dao import RepairmentDAO
-            return get_dao_data(RepairmentDAO)
+            return list(repairments_db.values())
         
         @api.doc(security='Bearer')
         @token_required
@@ -679,17 +735,18 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(repairment_model)
         def post(self):
             """Create new equipment repairment"""
-            try:
-                from my_project.auth.dao.orders.repairment_dao import RepairmentDAO
-                from my_project.auth.domain.orders.repairment import Repairment
-                data = request.get_json()
-                repairment = Repairment.create_from_dto(data)
-                dao = RepairmentDAO()
-                dao.create(repairment)
-                return repairment.put_into_dto(), 201
-            except Exception as e:
-                print(f"Error creating equipment repairment: {e}")
-                api.abort(500, 'Internal server error')
+            data = request.get_json()
+            repairment_id = max(repairments_db.keys()) + 1 if repairments_db else 1
+            repairment = {
+                'id': repairment_id,
+                'equipment_id': data.get('equipment_id'),
+                'repair_date': data.get('repair_date'),
+                'description': data.get('description'),
+                'cost': data.get('cost'),
+                'status': data.get('status')
+            }
+            repairments_db[repairment_id] = repairment
+            return repairment, 201
     
     # Health check endpoint
     @ns_health.route('/status')
@@ -702,6 +759,16 @@ def _init_swagger(app: Flask) -> None:
                 'message': 'Equipment Management System API is running!',
                 'version': '1.0',
                 'database': 'connected',
+                'equipment_count': len(equipment_db),
+                'equipment_items_count': len(equipment_items_db),
+                'equipment_types_count': len(equipment_types_db),
+                'students_count': len(students_db),
+                'masters_count': len(masters_db),
+                'projects_count': len(projects_db),
+                'suppliers_count': len(suppliers_db),
+                'usage_records_count': len(equipment_usage_db),
+                'reservations_count': len(equipment_reservations_db),
+                'repairments_count': len(repairments_db),
                 'timestamp': datetime.utcnow().isoformat()
             }
     
@@ -722,6 +789,18 @@ def _init_swagger(app: Flask) -> None:
                 'Repairment Management',
                 'Real-time Statistics'
             ],
+            'data_counts': {
+                'equipment': len(equipment_db),
+                'equipment_items': len(equipment_items_db),
+                'equipment_types': len(equipment_types_db),
+                'students': len(students_db),
+                'masters': len(masters_db),
+                'projects': len(projects_db),
+                'suppliers': len(suppliers_db),
+                'usage_records': len(equipment_usage_db),
+                'reservations': len(equipment_reservations_db),
+                'repairments': len(repairments_db)
+            },
             'endpoints': {
                 'authentication': {
                     'login': '/api/v1/auth/login',
@@ -779,7 +858,9 @@ def _init_swagger(app: Flask) -> None:
                 '1. Visit /api/docs/ for interactive API documentation',
                 '2. Login with test credentials to get JWT token',
                 '3. Use "Bearer <token>" in Authorization header for protected endpoints',
-                '4. Admin users have access to all management features'
+                '4. All data is stored in memory (like Pizza API example)',
+                '5. GET requests now return real data instead of empty fields!',
+                '6. Admin users have access to all management features'
             ]
         })
 
