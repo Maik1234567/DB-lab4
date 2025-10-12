@@ -254,6 +254,25 @@ def _init_swagger(app: Flask) -> None:
             return f(*args, **kwargs)
         return decorated
     
+    def get_dao_data(dao_class, method_name='find_all', *args):
+        """Helper function to get data from DAO"""
+        try:
+            dao = dao_class()
+            method = getattr(dao, method_name)
+            if args:
+                result = method(*args)
+            else:
+                result = method()
+            if result is None:
+                return []
+            if hasattr(result, '__iter__') and not isinstance(result, str):
+                return [item.put_into_dto() for item in result]
+            else:
+                return result.put_into_dto() if hasattr(result, 'put_into_dto') else result
+        except Exception as e:
+            print(f"Error in get_dao_data: {e}")
+            return []
+    
     # Mock users for authentication
     users_db = {
         'admin': {
@@ -344,10 +363,10 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_model)
         def get(self):
             """Get all equipment"""
-            from my_project.auth.controller.orders.equipment_controller import EquipmentController
             try:
-                controller = EquipmentController()
-                equipment = controller.find_all()
+                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
+                dao = EquipmentDAO()
+                equipment = dao.find_all()
                 if equipment is None:
                     return []
                 return [eq.put_into_dto() for eq in equipment]
@@ -361,23 +380,27 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_model)
         def post(self):
             """Create new equipment"""
-            from my_project.auth.controller.orders.equipment_controller import EquipmentController
-            from my_project.auth.domain.orders.equipment import Equipment
-            data = request.get_json()
-            equipment = Equipment.create_from_dto(data)
-            controller = EquipmentController()
-            controller.create_equipment(equipment)
-            return equipment.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
+                from my_project.auth.domain.orders.equipment import Equipment
+                data = request.get_json()
+                equipment = Equipment.create_from_dto(data)
+                dao = EquipmentDAO()
+                dao.create(equipment)
+                return equipment.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment: {e}")
+                api.abort(500, 'Internal server error')
     
     @ns_equipment.route('/<int:equipment_id>')
     class Equipment(Resource):
         @api.marshal_with(equipment_model)
         def get(self, equipment_id):
             """Get equipment by ID"""
-            from my_project.auth.controller.orders.equipment_controller import EquipmentController
             try:
-                controller = EquipmentController()
-                equipment = controller.find_by_id(equipment_id)
+                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
+                dao = EquipmentDAO()
+                equipment = dao.find_by_id(equipment_id)
                 if not equipment:
                     api.abort(404, 'Equipment not found')
                 return equipment.put_into_dto()
@@ -391,23 +414,31 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(message_response_model)
         def put(self, equipment_id):
             """Update equipment by ID"""
-            from my_project.auth.controller.orders.equipment_controller import EquipmentController
-            from my_project.auth.domain.orders.equipment import Equipment
-            data = request.get_json()
-            equipment = Equipment.create_from_dto(data)
-            controller = EquipmentController()
-            controller.update_equipment(equipment_id, equipment)
-            return {'message': 'Equipment updated successfully'}
+            try:
+                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
+                from my_project.auth.domain.orders.equipment import Equipment
+                data = request.get_json()
+                equipment = Equipment.create_from_dto(data)
+                dao = EquipmentDAO()
+                dao.update(equipment_id, equipment)
+                return {'message': 'Equipment updated successfully'}
+            except Exception as e:
+                print(f"Error updating equipment {equipment_id}: {e}")
+                api.abort(500, 'Internal server error')
         
         @api.doc(security='Bearer')
         @token_required
         @api.marshal_with(message_response_model)
         def delete(self, equipment_id):
             """Delete equipment by ID"""
-            from my_project.auth.controller.orders.equipment_controller import EquipmentController
-            controller = EquipmentController()
-            controller.delete_equipment(equipment_id)
-            return {'message': 'Equipment deleted successfully'}
+            try:
+                from my_project.auth.dao.orders.equipment_dao import EquipmentDAO
+                dao = EquipmentDAO()
+                dao.delete(equipment_id)
+                return {'message': 'Equipment deleted successfully'}
+            except Exception as e:
+                print(f"Error deleting equipment {equipment_id}: {e}")
+                api.abort(500, 'Internal server error')
     
     # Equipment Items endpoints
     @ns_equipment_items.route('/')
@@ -415,16 +446,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_item_model)
         def get(self):
             """Get all equipment items"""
-            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
-            try:
-                controller = EquipmentItemController()
-                items = controller.find_all()
-                if items is None:
-                    return []
-                return [item.put_into_dto() for item in items]
-            except Exception as e:
-                print(f"Error getting equipment items: {e}")
-                return []
+            from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
+            return get_dao_data(EquipmentItemDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -432,29 +455,25 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_item_model)
         def post(self):
             """Create new equipment item"""
-            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
-            from my_project.auth.domain.orders.equipment_item import EquipmentItem
-            data = request.get_json()
-            item = EquipmentItem.create_from_dto(data)
-            controller = EquipmentItemController()
-            controller.create_equipment_item(item)
-            return item.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
+                from my_project.auth.domain.orders.equipment_item import EquipmentItem
+                data = request.get_json()
+                item = EquipmentItem.create_from_dto(data)
+                dao = EquipmentItemDAO()
+                dao.create(item)
+                return item.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment item: {e}")
+                api.abort(500, 'Internal server error')
     
     @ns_equipment_items.route('/<int:item_id>')
     class EquipmentItem(Resource):
         @api.marshal_with(equipment_item_model)
         def get(self, item_id):
             """Get equipment item by ID"""
-            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
-            try:
-                controller = EquipmentItemController()
-                item = controller.find_by_id(item_id)
-                if not item:
-                    api.abort(404, 'Equipment item not found')
-                return item.put_into_dto()
-            except Exception as e:
-                print(f"Error getting equipment item {item_id}: {e}")
-                api.abort(500, 'Internal server error')
+            from my_project.auth.dao.orders.equipment_item_dao import EquipmentItemDAO
+            return get_dao_data(EquipmentItemDAO, 'find_by_id', item_id)
     
     # Equipment Types endpoints
     @ns_equipment_types.route('/')
@@ -462,16 +481,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_type_model)
         def get(self):
             """Get all equipment types"""
-            from my_project.auth.controller.orders.equipment_type_controller import EquipmentTypeController
-            try:
-                controller = EquipmentTypeController()
-                types = controller.find_all()
-                if types is None:
-                    return []
-                return [eq_type.put_into_dto() for eq_type in types]
-            except Exception as e:
-                print(f"Error getting equipment types: {e}")
-                return []
+            from my_project.auth.dao.orders.equipment_type_dao import EquipmentTypeDAO
+            return get_dao_data(EquipmentTypeDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -479,13 +490,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_type_model)
         def post(self):
             """Create new equipment type"""
-            from my_project.auth.controller.orders.equipment_type_controller import EquipmentTypeController
-            from my_project.auth.domain.orders.equipment_type import EquipmentType
-            data = request.get_json()
-            eq_type = EquipmentType.create_from_dto(data)
-            controller = EquipmentTypeController()
-            controller.create_equipment_type(eq_type)
-            return eq_type.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.equipment_type_dao import EquipmentTypeDAO
+                from my_project.auth.domain.orders.equipment_type import EquipmentType
+                data = request.get_json()
+                eq_type = EquipmentType.create_from_dto(data)
+                dao = EquipmentTypeDAO()
+                dao.create(eq_type)
+                return eq_type.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment type: {e}")
+                api.abort(500, 'Internal server error')
     
     # Students endpoints
     @ns_students.route('/')
@@ -493,16 +508,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(student_model)
         def get(self):
             """Get all students"""
-            from my_project.auth.controller.orders.student_controller import StudentController
-            try:
-                controller = StudentController()
-                students = controller.find_all()
-                if students is None:
-                    return []
-                return [student.put_into_dto() for student in students]
-            except Exception as e:
-                print(f"Error getting students: {e}")
-                return []
+            from my_project.auth.dao.orders.student_dao import StudentDAO
+            return get_dao_data(StudentDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -510,13 +517,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(student_model)
         def post(self):
             """Create new student"""
-            from my_project.auth.controller.orders.student_controller import StudentController
-            from my_project.auth.domain.orders.student import Student
-            data = request.get_json()
-            student = Student.create_from_dto(data)
-            controller = StudentController()
-            controller.create_student(student)
-            return student.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.student_dao import StudentDAO
+                from my_project.auth.domain.orders.student import Student
+                data = request.get_json()
+                student = Student.create_from_dto(data)
+                dao = StudentDAO()
+                dao.create(student)
+                return student.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating student: {e}")
+                api.abort(500, 'Internal server error')
     
     # Masters endpoints
     @ns_masters.route('/')
@@ -524,16 +535,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(master_model)
         def get(self):
             """Get all masters"""
-            from my_project.auth.controller.orders.masters_controller import MastersController
-            try:
-                controller = MastersController()
-                masters = controller.find_all()
-                if masters is None:
-                    return []
-                return [master.put_into_dto() for master in masters]
-            except Exception as e:
-                print(f"Error getting masters: {e}")
-                return []
+            from my_project.auth.dao.orders.masters_dao import MastersDAO
+            return get_dao_data(MastersDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -541,13 +544,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(master_model)
         def post(self):
             """Create new master"""
-            from my_project.auth.controller.orders.masters_controller import MastersController
-            from my_project.auth.domain.orders.masters import Masters
-            data = request.get_json()
-            master = Masters.create_from_dto(data)
-            controller = MastersController()
-            controller.create_master(master)
-            return master.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.masters_dao import MastersDAO
+                from my_project.auth.domain.orders.masters import Masters
+                data = request.get_json()
+                master = Masters.create_from_dto(data)
+                dao = MastersDAO()
+                dao.create(master)
+                return master.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating master: {e}")
+                api.abort(500, 'Internal server error')
     
     # Projects endpoints
     @ns_projects.route('/')
@@ -555,16 +562,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(project_model)
         def get(self):
             """Get all projects"""
-            from my_project.auth.controller.orders.projects_controller import ProjectsController
-            try:
-                controller = ProjectsController()
-                projects = controller.find_all()
-                if projects is None:
-                    return []
-                return [project.put_into_dto() for project in projects]
-            except Exception as e:
-                print(f"Error getting projects: {e}")
-                return []
+            from my_project.auth.dao.orders.projects_dao import ProjectsDAO
+            return get_dao_data(ProjectsDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -572,13 +571,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(project_model)
         def post(self):
             """Create new project"""
-            from my_project.auth.controller.orders.projects_controller import ProjectsController
-            from my_project.auth.domain.orders.projects import Projects
-            data = request.get_json()
-            project = Projects.create_from_dto(data)
-            controller = ProjectsController()
-            controller.create_project(project)
-            return project.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.projects_dao import ProjectsDAO
+                from my_project.auth.domain.orders.projects import Projects
+                data = request.get_json()
+                project = Projects.create_from_dto(data)
+                dao = ProjectsDAO()
+                dao.create(project)
+                return project.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating project: {e}")
+                api.abort(500, 'Internal server error')
     
     # Suppliers endpoints
     @ns_suppliers.route('/')
@@ -586,16 +589,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(supplier_model)
         def get(self):
             """Get all suppliers"""
-            from my_project.auth.controller.orders.suppliers_controller import SuppliersController
-            try:
-                controller = SuppliersController()
-                suppliers = controller.find_all()
-                if suppliers is None:
-                    return []
-                return [supplier.put_into_dto() for supplier in suppliers]
-            except Exception as e:
-                print(f"Error getting suppliers: {e}")
-                return []
+            from my_project.auth.dao.orders.suppliers_dao import SuppliersDAO
+            return get_dao_data(SuppliersDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -603,13 +598,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(supplier_model)
         def post(self):
             """Create new supplier"""
-            from my_project.auth.controller.orders.suppliers_controller import SuppliersController
-            from my_project.auth.domain.orders.suppliers import Suppliers
-            data = request.get_json()
-            supplier = Suppliers.create_from_dto(data)
-            controller = SuppliersController()
-            controller.create_supplier(supplier)
-            return supplier.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.suppliers_dao import SuppliersDAO
+                from my_project.auth.domain.orders.suppliers import Suppliers
+                data = request.get_json()
+                supplier = Suppliers.create_from_dto(data)
+                dao = SuppliersDAO()
+                dao.create(supplier)
+                return supplier.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating supplier: {e}")
+                api.abort(500, 'Internal server error')
     
     # Equipment Usage endpoints
     @ns_usage.route('/')
@@ -617,16 +616,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_usage_model)
         def get(self):
             """Get all equipment usage records"""
-            from my_project.auth.controller.orders.equipment_usage_controller import EquipmentUsageController
-            try:
-                controller = EquipmentUsageController()
-                usage = controller.find_all()
-                if usage is None:
-                    return []
-                return [record.put_into_dto() for record in usage]
-            except Exception as e:
-                print(f"Error getting equipment usage: {e}")
-                return []
+            from my_project.auth.dao.orders.equipment_usage_dao import EquipmentUsageDAO
+            return get_dao_data(EquipmentUsageDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -634,13 +625,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_usage_model)
         def post(self):
             """Create new equipment usage record"""
-            from my_project.auth.controller.orders.equipment_usage_controller import EquipmentUsageController
-            from my_project.auth.domain.orders.equipment_usage import EquipmentUsage
-            data = request.get_json()
-            usage = EquipmentUsage.create_from_dto(data)
-            controller = EquipmentUsageController()
-            controller.create_equipment_usage(usage)
-            return usage.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.equipment_usage_dao import EquipmentUsageDAO
+                from my_project.auth.domain.orders.equipment_usage import EquipmentUsage
+                data = request.get_json()
+                usage = EquipmentUsage.create_from_dto(data)
+                dao = EquipmentUsageDAO()
+                dao.create(usage)
+                return usage.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment usage: {e}")
+                api.abort(500, 'Internal server error')
     
     # Equipment Reservations endpoints
     @ns_reservations.route('/')
@@ -648,16 +643,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(equipment_reservation_model)
         def get(self):
             """Get all equipment reservations"""
-            from my_project.auth.controller.orders.equipment_reservation_controller import EquipmentReservationController
-            try:
-                controller = EquipmentReservationController()
-                reservations = controller.find_all()
-                if reservations is None:
-                    return []
-                return [reservation.put_into_dto() for reservation in reservations]
-            except Exception as e:
-                print(f"Error getting equipment reservations: {e}")
-                return []
+            from my_project.auth.dao.orders.equipment_reservation_dao import EquipmentReservationDAO
+            return get_dao_data(EquipmentReservationDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -665,13 +652,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(equipment_reservation_model)
         def post(self):
             """Create new equipment reservation"""
-            from my_project.auth.controller.orders.equipment_reservation_controller import EquipmentReservationController
-            from my_project.auth.domain.orders.equipment_reservation import EquipmentReservation
-            data = request.get_json()
-            reservation = EquipmentReservation.create_from_dto(data)
-            controller = EquipmentReservationController()
-            controller.create_equipment_reservation(reservation)
-            return reservation.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.equipment_reservation_dao import EquipmentReservationDAO
+                from my_project.auth.domain.orders.equipment_reservation import EquipmentReservation
+                data = request.get_json()
+                reservation = EquipmentReservation.create_from_dto(data)
+                dao = EquipmentReservationDAO()
+                dao.create(reservation)
+                return reservation.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment reservation: {e}")
+                api.abort(500, 'Internal server error')
     
     # Repairments endpoints
     @ns_repairments.route('/')
@@ -679,16 +670,8 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_list_with(repairment_model)
         def get(self):
             """Get all equipment repairments"""
-            from my_project.auth.controller.orders.repairment_controller import RepairmentController
-            try:
-                controller = RepairmentController()
-                repairments = controller.find_all()
-                if repairments is None:
-                    return []
-                return [repairment.put_into_dto() for repairment in repairments]
-            except Exception as e:
-                print(f"Error getting equipment repairments: {e}")
-                return []
+            from my_project.auth.dao.orders.repairment_dao import RepairmentDAO
+            return get_dao_data(RepairmentDAO)
         
         @api.doc(security='Bearer')
         @token_required
@@ -696,13 +679,17 @@ def _init_swagger(app: Flask) -> None:
         @api.marshal_with(repairment_model)
         def post(self):
             """Create new equipment repairment"""
-            from my_project.auth.controller.orders.repairment_controller import RepairmentController
-            from my_project.auth.domain.orders.repairment import Repairment
-            data = request.get_json()
-            repairment = Repairment.create_from_dto(data)
-            controller = RepairmentController()
-            controller.create_repairment(repairment)
-            return repairment.put_into_dto(), 201
+            try:
+                from my_project.auth.dao.orders.repairment_dao import RepairmentDAO
+                from my_project.auth.domain.orders.repairment import Repairment
+                data = request.get_json()
+                repairment = Repairment.create_from_dto(data)
+                dao = RepairmentDAO()
+                dao.create(repairment)
+                return repairment.put_into_dto(), 201
+            except Exception as e:
+                print(f"Error creating equipment repairment: {e}")
+                api.abort(500, 'Internal server error')
     
     # Health check endpoint
     @ns_health.route('/status')
