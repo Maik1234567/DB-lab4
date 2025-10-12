@@ -106,7 +106,7 @@ def _init_swagger(app: Flask) -> None:
     
     api = Api(
         app, 
-        title='Equipment Management API',
+        title='Equipment Management System API',
         description='Complete REST API for equipment management system with authentication',
         version='1.0',
         doc='/api/docs/',
@@ -115,15 +115,93 @@ def _init_swagger(app: Flask) -> None:
         security='Bearer'
     )
     
-    # API Models
-    user_model = api.model('User', {
-        'id': fields.Integer(description='User ID'),
-        'username': fields.String(required=True, description='Username'),
-        'email': fields.String(required=True, description='Email'),
-        'phone': fields.String(description='Phone number'),
-        'address': fields.String(description='Address')
+    # Equipment models
+    equipment_model = api.model('Equipment', {
+        'id': fields.Integer(description='Equipment ID'),
+        'name': fields.String(required=True, description='Equipment name'),
+        'description': fields.String(required=True, description='Equipment description'),
+        'status': fields.String(required=True, description='Equipment status'),
+        'equipment_item_id': fields.Integer(description='Equipment item ID')
     })
     
+    equipment_item_model = api.model('EquipmentItem', {
+        'id': fields.Integer(description='Equipment Item ID'),
+        'condition': fields.String(required=True, description='Item condition'),
+        'purchase_date': fields.Date(description='Purchase date'),
+        'serial_number': fields.String(required=True, description='Serial number'),
+        'equipment_type_id': fields.Integer(description='Equipment type ID')
+    })
+    
+    equipment_type_model = api.model('EquipmentType', {
+        'id': fields.Integer(description='Equipment Type ID'),
+        'name': fields.String(required=True, description='Type name'),
+        'description': fields.String(required=True, description='Type description')
+    })
+    
+    # Student models
+    student_model = api.model('Student', {
+        'id': fields.Integer(description='Student ID'),
+        'name': fields.String(required=True, description='Student name'),
+        'group': fields.String(description='Student group'),
+        'email': fields.String(description='Student email')
+    })
+    
+    # Master models
+    master_model = api.model('Master', {
+        'id': fields.Integer(description='Master ID'),
+        'name': fields.String(required=True, description='Master name'),
+        'specialization': fields.String(description='Master specialization'),
+        'email': fields.String(description='Master email')
+    })
+    
+    # Project models
+    project_model = api.model('Project', {
+        'id': fields.Integer(description='Project ID'),
+        'name': fields.String(required=True, description='Project name'),
+        'description': fields.String(description='Project description'),
+        'start_date': fields.Date(description='Start date'),
+        'end_date': fields.Date(description='End date')
+    })
+    
+    # Supplier models
+    supplier_model = api.model('Supplier', {
+        'id': fields.Integer(description='Supplier ID'),
+        'name': fields.String(required=True, description='Supplier name'),
+        'contact_person': fields.String(description='Contact person'),
+        'phone': fields.String(description='Phone number'),
+        'email': fields.String(description='Email address')
+    })
+    
+    # Equipment Usage models
+    equipment_usage_model = api.model('EquipmentUsage', {
+        'id': fields.Integer(description='Usage ID'),
+        'equipment_id': fields.Integer(description='Equipment ID'),
+        'student_id': fields.Integer(description='Student ID'),
+        'usage_date': fields.Date(description='Usage date'),
+        'purpose': fields.String(description='Usage purpose')
+    })
+    
+    # Equipment Reservation models
+    equipment_reservation_model = api.model('EquipmentReservation', {
+        'id': fields.Integer(description='Reservation ID'),
+        'equipment_id': fields.Integer(description='Equipment ID'),
+        'student_id': fields.Integer(description='Student ID'),
+        'reservation_date': fields.Date(description='Reservation date'),
+        'return_date': fields.Date(description='Return date'),
+        'status': fields.String(description='Reservation status')
+    })
+    
+    # Repairment models
+    repairment_model = api.model('Repairment', {
+        'id': fields.Integer(description='Repairment ID'),
+        'equipment_id': fields.Integer(description='Equipment ID'),
+        'repair_date': fields.Date(description='Repair date'),
+        'description': fields.String(description='Repair description'),
+        'cost': fields.Float(description='Repair cost'),
+        'status': fields.String(description='Repair status')
+    })
+    
+    # Authentication models
     login_model = api.model('Login', {
         'username': fields.String(required=True, description='Username'),
         'password': fields.String(required=True, description='Password')
@@ -132,12 +210,14 @@ def _init_swagger(app: Flask) -> None:
     register_model = api.model('Register', {
         'username': fields.String(required=True, description='Username'),
         'password': fields.String(required=True, description='Password'),
-        'email': fields.String(required=True, description='Email'),
-        'phone': fields.String(description='Phone number'),
-        'address': fields.String(description='Address')
+        'email': fields.String(required=True, description='Email')
     })
     
-    # API Response models
+    # Response models
+    message_response_model = api.model('MessageResponse', {
+        'message': fields.String(description='Response message')
+    })
+    
     token_response_model = api.model('TokenResponse', {
         'token': fields.String(description='JWT Access Token'),
         'user': fields.Nested(api.model('UserInfo', {
@@ -146,10 +226,6 @@ def _init_swagger(app: Flask) -> None:
             'email': fields.String(description='Email')
         })),
         'message': fields.String(description='Success message')
-    })
-    
-    message_response_model = api.model('MessageResponse', {
-        'message': fields.String(description='Response message')
     })
     
     health_model = api.model('HealthStatus', {
@@ -178,30 +254,37 @@ def _init_swagger(app: Flask) -> None:
             return f(*args, **kwargs)
         return decorated
     
-    # Simple in-memory user storage for demo
+    # Mock users for authentication
     users_db = {
         'admin': {
             'id': 1,
             'username': 'admin',
             'email': 'admin@equipment.com',
             'password': generate_password_hash('admin123'),
-            'phone': '+380123456789',
-            'address': '123 Main St'
         },
         'user': {
             'id': 2,
             'username': 'user',
-            'email': 'user@gmail.com', 
+            'email': 'user@equipment.com', 
             'password': generate_password_hash('user123'),
-            'phone': '+380987654321',
-            'address': '456 Oak Ave'
         }
     }
     
+    # Create namespaces
     ns_auth = api.namespace('auth', description='Authentication and authorization')
-    ns_users = api.namespace('users', description='User management')
+    ns_equipment = api.namespace('equipment', description='Equipment management')
+    ns_equipment_items = api.namespace('equipment-items', description='Equipment items management')
+    ns_equipment_types = api.namespace('equipment-types', description='Equipment types management')
+    ns_students = api.namespace('students', description='Student management')
+    ns_masters = api.namespace('masters', description='Master management')
+    ns_projects = api.namespace('projects', description='Project management')
+    ns_suppliers = api.namespace('suppliers', description='Supplier management')
+    ns_usage = api.namespace('usage', description='Equipment usage management')
+    ns_reservations = api.namespace('reservations', description='Equipment reservations management')
+    ns_repairments = api.namespace('repairments', description='Equipment repairments management')
     ns_health = api.namespace('health', description='System monitoring')
     
+    # Authentication endpoints
     @ns_auth.route('/register')
     class Register(Resource):
         @api.expect(register_model)
@@ -222,8 +305,6 @@ def _init_swagger(app: Flask) -> None:
                 'username': username,
                 'email': data.get('email'),
                 'password': generate_password_hash(data.get('password')),
-                'phone': data.get('phone', ''),
-                'address': data.get('address', '')
             }
             
             return {'message': f'User {username} registered successfully!'}, 201
@@ -257,29 +338,373 @@ def _init_swagger(app: Flask) -> None:
                 'message': 'Login successful!'
             }
     
-    @ns_users.route('/profile')
-    class UserProfile(Resource):
+    # Equipment endpoints
+    @ns_equipment.route('/')
+    class EquipmentList(Resource):
+        @api.marshal_list_with(equipment_model)
+        def get(self):
+            """Get all equipment"""
+            from my_project.auth.controller.orders.equipment_controller import EquipmentController
+            try:
+                controller = EquipmentController()
+                equipment = controller.find_all()
+                if equipment is None:
+                    return []
+                return [eq.put_into_dto() for eq in equipment]
+            except Exception as e:
+                print(f"Error getting equipment: {e}")
+                return []
+        
         @api.doc(security='Bearer')
         @token_required
-        @api.marshal_with(user_model)
-        def get(self):
-            """Get current user profile"""
-            user = users_db.get(g.current_user)
-            if not user:
-                api.abort(404, 'User not found')
-            return user
+        @api.expect(equipment_model)
+        @api.marshal_with(equipment_model)
+        def post(self):
+            """Create new equipment"""
+            from my_project.auth.controller.orders.equipment_controller import EquipmentController
+            from my_project.auth.domain.orders.equipment import Equipment
+            data = request.get_json()
+            equipment = Equipment.create_from_dto(data)
+            controller = EquipmentController()
+            controller.create_equipment(equipment)
+            return equipment.put_into_dto(), 201
     
-    @ns_users.route('/')
-    class UsersList(Resource):
+    @ns_equipment.route('/<int:equipment_id>')
+    class Equipment(Resource):
+        @api.marshal_with(equipment_model)
+        def get(self, equipment_id):
+            """Get equipment by ID"""
+            from my_project.auth.controller.orders.equipment_controller import EquipmentController
+            try:
+                controller = EquipmentController()
+                equipment = controller.find_by_id(equipment_id)
+                if not equipment:
+                    api.abort(404, 'Equipment not found')
+                return equipment.put_into_dto()
+            except Exception as e:
+                print(f"Error getting equipment {equipment_id}: {e}")
+                api.abort(500, 'Internal server error')
+        
         @api.doc(security='Bearer')
         @token_required
-        @api.marshal_list_with(user_model)
-        def get(self):
-            """Get all users (admin only)"""
-            if g.current_user != 'admin':
-                api.abort(403, 'Access denied')
-            return list(users_db.values())
+        @api.expect(equipment_model)
+        @api.marshal_with(message_response_model)
+        def put(self, equipment_id):
+            """Update equipment by ID"""
+            from my_project.auth.controller.orders.equipment_controller import EquipmentController
+            from my_project.auth.domain.orders.equipment import Equipment
+            data = request.get_json()
+            equipment = Equipment.create_from_dto(data)
+            controller = EquipmentController()
+            controller.update_equipment(equipment_id, equipment)
+            return {'message': 'Equipment updated successfully'}
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.marshal_with(message_response_model)
+        def delete(self, equipment_id):
+            """Delete equipment by ID"""
+            from my_project.auth.controller.orders.equipment_controller import EquipmentController
+            controller = EquipmentController()
+            controller.delete_equipment(equipment_id)
+            return {'message': 'Equipment deleted successfully'}
     
+    # Equipment Items endpoints
+    @ns_equipment_items.route('/')
+    class EquipmentItemsList(Resource):
+        @api.marshal_list_with(equipment_item_model)
+        def get(self):
+            """Get all equipment items"""
+            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
+            try:
+                controller = EquipmentItemController()
+                items = controller.find_all()
+                if items is None:
+                    return []
+                return [item.put_into_dto() for item in items]
+            except Exception as e:
+                print(f"Error getting equipment items: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(equipment_item_model)
+        @api.marshal_with(equipment_item_model)
+        def post(self):
+            """Create new equipment item"""
+            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
+            from my_project.auth.domain.orders.equipment_item import EquipmentItem
+            data = request.get_json()
+            item = EquipmentItem.create_from_dto(data)
+            controller = EquipmentItemController()
+            controller.create_equipment_item(item)
+            return item.put_into_dto(), 201
+    
+    @ns_equipment_items.route('/<int:item_id>')
+    class EquipmentItem(Resource):
+        @api.marshal_with(equipment_item_model)
+        def get(self, item_id):
+            """Get equipment item by ID"""
+            from my_project.auth.controller.orders.equipment_item_controller import EquipmentItemController
+            try:
+                controller = EquipmentItemController()
+                item = controller.find_by_id(item_id)
+                if not item:
+                    api.abort(404, 'Equipment item not found')
+                return item.put_into_dto()
+            except Exception as e:
+                print(f"Error getting equipment item {item_id}: {e}")
+                api.abort(500, 'Internal server error')
+    
+    # Equipment Types endpoints
+    @ns_equipment_types.route('/')
+    class EquipmentTypesList(Resource):
+        @api.marshal_list_with(equipment_type_model)
+        def get(self):
+            """Get all equipment types"""
+            from my_project.auth.controller.orders.equipment_type_controller import EquipmentTypeController
+            try:
+                controller = EquipmentTypeController()
+                types = controller.find_all()
+                if types is None:
+                    return []
+                return [eq_type.put_into_dto() for eq_type in types]
+            except Exception as e:
+                print(f"Error getting equipment types: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(equipment_type_model)
+        @api.marshal_with(equipment_type_model)
+        def post(self):
+            """Create new equipment type"""
+            from my_project.auth.controller.orders.equipment_type_controller import EquipmentTypeController
+            from my_project.auth.domain.orders.equipment_type import EquipmentType
+            data = request.get_json()
+            eq_type = EquipmentType.create_from_dto(data)
+            controller = EquipmentTypeController()
+            controller.create_equipment_type(eq_type)
+            return eq_type.put_into_dto(), 201
+    
+    # Students endpoints
+    @ns_students.route('/')
+    class StudentsList(Resource):
+        @api.marshal_list_with(student_model)
+        def get(self):
+            """Get all students"""
+            from my_project.auth.controller.orders.student_controller import StudentController
+            try:
+                controller = StudentController()
+                students = controller.find_all()
+                if students is None:
+                    return []
+                return [student.put_into_dto() for student in students]
+            except Exception as e:
+                print(f"Error getting students: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(student_model)
+        @api.marshal_with(student_model)
+        def post(self):
+            """Create new student"""
+            from my_project.auth.controller.orders.student_controller import StudentController
+            from my_project.auth.domain.orders.student import Student
+            data = request.get_json()
+            student = Student.create_from_dto(data)
+            controller = StudentController()
+            controller.create_student(student)
+            return student.put_into_dto(), 201
+    
+    # Masters endpoints
+    @ns_masters.route('/')
+    class MastersList(Resource):
+        @api.marshal_list_with(master_model)
+        def get(self):
+            """Get all masters"""
+            from my_project.auth.controller.orders.masters_controller import MastersController
+            try:
+                controller = MastersController()
+                masters = controller.find_all()
+                if masters is None:
+                    return []
+                return [master.put_into_dto() for master in masters]
+            except Exception as e:
+                print(f"Error getting masters: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(master_model)
+        @api.marshal_with(master_model)
+        def post(self):
+            """Create new master"""
+            from my_project.auth.controller.orders.masters_controller import MastersController
+            from my_project.auth.domain.orders.masters import Masters
+            data = request.get_json()
+            master = Masters.create_from_dto(data)
+            controller = MastersController()
+            controller.create_master(master)
+            return master.put_into_dto(), 201
+    
+    # Projects endpoints
+    @ns_projects.route('/')
+    class ProjectsList(Resource):
+        @api.marshal_list_with(project_model)
+        def get(self):
+            """Get all projects"""
+            from my_project.auth.controller.orders.projects_controller import ProjectsController
+            try:
+                controller = ProjectsController()
+                projects = controller.find_all()
+                if projects is None:
+                    return []
+                return [project.put_into_dto() for project in projects]
+            except Exception as e:
+                print(f"Error getting projects: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(project_model)
+        @api.marshal_with(project_model)
+        def post(self):
+            """Create new project"""
+            from my_project.auth.controller.orders.projects_controller import ProjectsController
+            from my_project.auth.domain.orders.projects import Projects
+            data = request.get_json()
+            project = Projects.create_from_dto(data)
+            controller = ProjectsController()
+            controller.create_project(project)
+            return project.put_into_dto(), 201
+    
+    # Suppliers endpoints
+    @ns_suppliers.route('/')
+    class SuppliersList(Resource):
+        @api.marshal_list_with(supplier_model)
+        def get(self):
+            """Get all suppliers"""
+            from my_project.auth.controller.orders.suppliers_controller import SuppliersController
+            try:
+                controller = SuppliersController()
+                suppliers = controller.find_all()
+                if suppliers is None:
+                    return []
+                return [supplier.put_into_dto() for supplier in suppliers]
+            except Exception as e:
+                print(f"Error getting suppliers: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(supplier_model)
+        @api.marshal_with(supplier_model)
+        def post(self):
+            """Create new supplier"""
+            from my_project.auth.controller.orders.suppliers_controller import SuppliersController
+            from my_project.auth.domain.orders.suppliers import Suppliers
+            data = request.get_json()
+            supplier = Suppliers.create_from_dto(data)
+            controller = SuppliersController()
+            controller.create_supplier(supplier)
+            return supplier.put_into_dto(), 201
+    
+    # Equipment Usage endpoints
+    @ns_usage.route('/')
+    class EquipmentUsageList(Resource):
+        @api.marshal_list_with(equipment_usage_model)
+        def get(self):
+            """Get all equipment usage records"""
+            from my_project.auth.controller.orders.equipment_usage_controller import EquipmentUsageController
+            try:
+                controller = EquipmentUsageController()
+                usage = controller.find_all()
+                if usage is None:
+                    return []
+                return [record.put_into_dto() for record in usage]
+            except Exception as e:
+                print(f"Error getting equipment usage: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(equipment_usage_model)
+        @api.marshal_with(equipment_usage_model)
+        def post(self):
+            """Create new equipment usage record"""
+            from my_project.auth.controller.orders.equipment_usage_controller import EquipmentUsageController
+            from my_project.auth.domain.orders.equipment_usage import EquipmentUsage
+            data = request.get_json()
+            usage = EquipmentUsage.create_from_dto(data)
+            controller = EquipmentUsageController()
+            controller.create_equipment_usage(usage)
+            return usage.put_into_dto(), 201
+    
+    # Equipment Reservations endpoints
+    @ns_reservations.route('/')
+    class EquipmentReservationsList(Resource):
+        @api.marshal_list_with(equipment_reservation_model)
+        def get(self):
+            """Get all equipment reservations"""
+            from my_project.auth.controller.orders.equipment_reservation_controller import EquipmentReservationController
+            try:
+                controller = EquipmentReservationController()
+                reservations = controller.find_all()
+                if reservations is None:
+                    return []
+                return [reservation.put_into_dto() for reservation in reservations]
+            except Exception as e:
+                print(f"Error getting equipment reservations: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(equipment_reservation_model)
+        @api.marshal_with(equipment_reservation_model)
+        def post(self):
+            """Create new equipment reservation"""
+            from my_project.auth.controller.orders.equipment_reservation_controller import EquipmentReservationController
+            from my_project.auth.domain.orders.equipment_reservation import EquipmentReservation
+            data = request.get_json()
+            reservation = EquipmentReservation.create_from_dto(data)
+            controller = EquipmentReservationController()
+            controller.create_equipment_reservation(reservation)
+            return reservation.put_into_dto(), 201
+    
+    # Repairments endpoints
+    @ns_repairments.route('/')
+    class RepairmentsList(Resource):
+        @api.marshal_list_with(repairment_model)
+        def get(self):
+            """Get all equipment repairments"""
+            from my_project.auth.controller.orders.repairment_controller import RepairmentController
+            try:
+                controller = RepairmentController()
+                repairments = controller.find_all()
+                if repairments is None:
+                    return []
+                return [repairment.put_into_dto() for repairment in repairments]
+            except Exception as e:
+                print(f"Error getting equipment repairments: {e}")
+                return []
+        
+        @api.doc(security='Bearer')
+        @token_required
+        @api.expect(repairment_model)
+        @api.marshal_with(repairment_model)
+        def post(self):
+            """Create new equipment repairment"""
+            from my_project.auth.controller.orders.repairment_controller import RepairmentController
+            from my_project.auth.domain.orders.repairment import Repairment
+            data = request.get_json()
+            repairment = Repairment.create_from_dto(data)
+            controller = RepairmentController()
+            controller.create_repairment(repairment)
+            return repairment.put_into_dto(), 201
+    
+    # Health check endpoint
     @ns_health.route('/status')
     class HealthCheck(Resource):
         @api.marshal_with(health_model)
@@ -287,32 +712,73 @@ def _init_swagger(app: Flask) -> None:
             """System health check"""
             return {
                 'status': 'healthy',
-                'message': 'Equipment Management API is running!',
+                'message': 'Equipment Management System API is running!',
                 'version': '1.0',
                 'database': 'connected',
                 'timestamp': datetime.utcnow().isoformat()
             }
     
+    # Root endpoint
     @app.route("/")
     def hello_world():
         return jsonify({
-            'message': 'Welcome to Equipment Management API!',
+            'message': 'Welcome to Equipment Management System API!',
             'docs_url': '/api/docs/',
             'api_version': '1.0',
             'features': [
                 'JWT Authentication',
-                'User Management',
                 'Equipment Management',
-                'Admin Dashboard'
+                'Student Management',
+                'Project Management',
+                'Reservation System',
+                'Usage Tracking',
+                'Repairment Management',
+                'Real-time Statistics'
             ],
             'endpoints': {
                 'authentication': {
                     'login': '/api/v1/auth/login',
                     'register': '/api/v1/auth/register'
                 },
-                'users': {
-                    'profile': '/api/v1/users/profile',
-                    'list_all': '/api/v1/users/'
+                'equipment': {
+                    'list': '/api/v1/equipment/',
+                    'by_id': '/api/v1/equipment/{id}'
+                },
+                'equipment_items': {
+                    'list': '/api/v1/equipment-items/',
+                    'by_id': '/api/v1/equipment-items/{id}'
+                },
+                'equipment_types': {
+                    'list': '/api/v1/equipment-types/',
+                    'by_id': '/api/v1/equipment-types/{id}'
+                },
+                'students': {
+                    'list': '/api/v1/students/',
+                    'by_id': '/api/v1/students/{id}'
+                },
+                'masters': {
+                    'list': '/api/v1/masters/',
+                    'by_id': '/api/v1/masters/{id}'
+                },
+                'projects': {
+                    'list': '/api/v1/projects/',
+                    'by_id': '/api/v1/projects/{id}'
+                },
+                'suppliers': {
+                    'list': '/api/v1/suppliers/',
+                    'by_id': '/api/v1/suppliers/{id}'
+                },
+                'usage': {
+                    'list': '/api/v1/usage/',
+                    'by_id': '/api/v1/usage/{id}'
+                },
+                'reservations': {
+                    'list': '/api/v1/reservations/',
+                    'by_id': '/api/v1/reservations/{id}'
+                },
+                'repairments': {
+                    'list': '/api/v1/repairments/',
+                    'by_id': '/api/v1/repairments/{id}'
                 },
                 'system': {
                     'health': '/api/v1/health/status'
@@ -326,7 +792,7 @@ def _init_swagger(app: Flask) -> None:
                 '1. Visit /api/docs/ for interactive API documentation',
                 '2. Login with test credentials to get JWT token',
                 '3. Use "Bearer <token>" in Authorization header for protected endpoints',
-                '4. Admin users have access to management features'
+                '4. Admin users have access to all management features'
             ]
         })
 
