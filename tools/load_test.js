@@ -1,6 +1,6 @@
-const url = "http://localhost:5000/api/v1/equipment/"; 
+const url = "https://acrcontainerpython.blackocean-fc496ac4.switzerlandnorth.azurecontainerapps.io/equipment"; 
 
-const TOKEN = "<JWT>"; 
+const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN0cmluZyIsImV4cCI6MTc2MjM4MDA4NH0.KIrHvCDyarVPu17ZNNxaNT5VEbXcC4P7hLkchVcIUr8"; 
 
 const data = {
   name: "LoadTest Equipment",
